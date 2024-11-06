@@ -248,7 +248,6 @@ namespace RenderHeads.Media.AVProVideo
 				StereoscopicLeftRight,
 				StereoscopicCustom,
 				StereoscopicRightLeft,
-				StereoscopicTwoTextures,
 			}
 
 			[Flags]
@@ -341,7 +340,6 @@ namespace RenderHeads.Media.AVProVideo
 				RG16,
 				BGR10XR,
 				RGBA16Float,
-				AndroidOES,
 			}
 
 			[StructLayout(LayoutKind.Sequential)]
@@ -360,7 +358,6 @@ namespace RenderHeads.Media.AVProVideo
 				Flipped   = 1 << 0,
 				Linear    = 1 << 1,
 				Mipmapped = 1 << 2,
-				YCbCr     = 1 << 3,
 			}
 
 			internal enum AVPPlayerTextureYCbCrMatrix: int
@@ -373,10 +370,10 @@ namespace RenderHeads.Media.AVProVideo
 			[StructLayout(LayoutKind.Sequential)]
 			internal struct AVPPlayerTexture
 			{
-				[MarshalAs(UnmanagedType.ByValArray, SizeConst=4)]
+				[MarshalAs(UnmanagedType.ByValArray, SizeConst=2)]
 				internal AVPPlayerTexturePlane[] planes;
 				internal long itemTime;
-				internal int frameCounter;
+				internal int frameCount;
 				internal int planeCount;
 				internal AVPPlayerTextureFlags flags;
 				internal AVPPlayerTextureYCbCrMatrix YCbCrMatrix;

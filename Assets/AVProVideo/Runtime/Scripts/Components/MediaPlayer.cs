@@ -1,20 +1,15 @@
-//-----------------------------------------------------------------------------
-// Copyright 2015-2024 RenderHeads Ltd.  All rights reserved.
-//-----------------------------------------------------------------------------
-
 //#define AVPROVIDEO_BETA_SUPPORT_TIMESCALE		// BETA FEATURE: comment this in if you want to support frame stepping based on changes in Time.timeScale or Time.captureFramerate
 //#define AVPROVIDEO_FORCE_NULL_MEDIAPLAYER		// DEV FEATURE: comment this out to make all mediaplayers use the null mediaplayer
 //#define AVPROVIDEO_DISABLE_LOGGING			// DEV FEATURE: disables Debug.Log from AVPro Video
 #define AVPROVIDEO_SUPPORT_LIVEEDITMODE
-//#define AVPROVIDEO_WINDOWS_UNIFIED_DLLS		// DEV FEATURE: are we using new unified (DS + MF + WRT) Windows DLLs?
-
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || (!UNITY_EDITOR && (UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS))
-	#define UNITY_PLATFORM_SUPPORTS_YPCBCR
-#endif
-
 using UnityEngine;
 using UnityEngine.Serialization;
 using System.Collections;
+using System.Collections.Generic;
+
+//-----------------------------------------------------------------------------
+// Copyright 2015-2022 RenderHeads Ltd.  All rights reserved.
+//-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
 {
@@ -641,13 +636,11 @@ namespace RenderHeads.Media.AVProVideo
 		#elif (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
 			// RJT NOTE: Added Windows here as it currently creates players on demand so most parameters can be passed down pre-'Open()' and honoured
 			// - (Fixes some issues in https://github.com/RenderHeads/UnityPlugin-AVProVideo/issues/1692)
-			#if !AVPROVIDEO_WINDOWS_UNIFIED_DLLS
 			if (_optionsWindows.videoApi == Windows.VideoApi.WinRT)
 			{
 				((WindowsRtMediaPlayer)_baseMediaPlayer).SetOptions(_optionsWindows);
 			}
 			else
-			#endif
 			{
 				((WindowsMediaPlayer)_baseMediaPlayer).SetOptions(_optionsWindows);
 			}
@@ -985,9 +978,7 @@ namespace RenderHeads.Media.AVProVideo
 #if UNITY_EDITOR
 	#if UNITY_EDITOR_WIN
 				WindowsMediaPlayer.DeinitPlatform();
-		#if !AVPROVIDEO_WINDOWS_UNIFIED_DLLS
 				WindowsRtMediaPlayer.DeinitPlatform();
-		#endif
 	#endif
 #else
 	#if (UNITY_STANDALONE_WIN)
@@ -1290,7 +1281,6 @@ namespace RenderHeads.Media.AVProVideo
 		private static BaseMediaPlayer CreateMediaPlayer(OptionsWindows options)
 		{
 			BaseMediaPlayer result = null;
-			#if !AVPROVIDEO_WINDOWS_UNIFIED_DLLS
 			if (options.videoApi == Windows.VideoApi.WinRT)
 			{
 				if (WindowsRtMediaPlayer.InitialisePlatform())
@@ -1302,7 +1292,6 @@ namespace RenderHeads.Media.AVProVideo
 					Debug.LogWarning(string.Format("[AVProVideo] Failed to initialise WinRT API - platform {0} may not support it.  Trying another video API...", SystemInfo.operatingSystem));
 				}
 			}
-			#endif
 
 			if (result == null)
 			{
@@ -1457,19 +1446,9 @@ namespace RenderHeads.Media.AVProVideo
 
 		public bool IsUsingAndroidOESPath()
 		{
-			#if !UNITY_EDITOR && UNITY_ANDROID
-				PlatformMediaPlayer platformMediaPlayer = (PlatformMediaPlayer)_baseMediaPlayer;
-				return platformMediaPlayer.IsUsingOESFastpath();
-			#else
-				return false;
-			#endif
-		}
-
-		public bool IsUsingYCbCr()
-		{
-		#if UNITY_PLATFORM_SUPPORTS_YPCBCR
-			PlatformMediaPlayer platformMediaPlayer = _baseMediaPlayer as PlatformMediaPlayer;
-			return platformMediaPlayer != null ? platformMediaPlayer.IsUsingYCbCr() : false;
+			// Android OES mode is not available in the trial
+		#if !UNITY_EDITOR && UNITY_ANDROID
+			return !s_TrialVersion && (PlatformOptionsAndroid.textureFormat == MediaPlayer.OptionsAndroid.TextureFormat.YCbCr420_OES);
 		#else
 			return false;
 		#endif

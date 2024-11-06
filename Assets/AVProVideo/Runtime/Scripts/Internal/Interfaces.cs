@@ -510,6 +510,20 @@ namespace RenderHeads.Media.AVProVideo
 		Matrix4x4 GetTextureMatrix();
 
 		/// <summary>
+		/// Options for passing into GetCompatibleRenderTextureFormat
+		/// </summary>
+		[Flags]
+		enum GetCompatibleRenderTextureFormatOptions
+		{
+			/// <summary>No options, default behaviour based on the texture's format</summary>
+			Default       = 0,
+			/// <summary>The format is for a final resolve, i.e. converting from YCbCr to RGBA</summary>
+			ForResolve    = 1 << 0,
+			/// <summary>The format requires an alpha channel</summary>
+			RequiresAlpha = 1 << 1,
+		}
+
+		/// <summary>
 		/// Get a render texture format that is compatible with the textures internal format
 		/// </summary>
 		/// <param name="options">Any options that may change the choice of render texture format, defaults to None</param>
@@ -527,20 +541,6 @@ namespace RenderHeads.Media.AVProVideo
 
 		bool TextureRequiresGammaConversion();
 #endif
-	}
-
-	/// <summary>
-	/// Options for passing into GetCompatibleRenderTextureFormat
-	/// </summary>
-	[Flags]
-	public enum GetCompatibleRenderTextureFormatOptions
-	{
-		/// <summary>No options, default behaviour based on the texture's format</summary>
-		Default = 0,
-		/// <summary>The format is for a final resolve, i.e. converting from YCbCr to RGBA</summary>
-		ForResolve = 1 << 0,
-		/// <summary>The format requires an alpha channel</summary>
-		RequiresAlpha = 1 << 1,
 	}
 
 	public enum Platform

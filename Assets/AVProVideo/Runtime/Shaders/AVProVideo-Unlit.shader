@@ -2,15 +2,11 @@
 {
 	Properties
 	{
-		_MainTex   ("Base (RGB)", 2D) = "black" { }
-		_ChromaTex ("Chroma",     2D) = "gray"  { }
-
-		_MainTex_R   ("Right Eye Base",   2D) = "black" { }
-		_ChromaTex_R ("Right Eye Chroma", 2D) = "gray"  { }
-
+		_MainTex ("Base (RGB)", 2D) = "black" { }
+		_ChromaTex ("Chroma", 2D) = "gray" { }
 		_Color("Main Color", Color) = (1,1,1,1)
 
-		[KeywordEnum(None, Top_Bottom, Left_Right, Custom_UV, TwoTextures)] Stereo("Stereo Mode", Float) = 0
+		[KeywordEnum(None, Top_Bottom, Left_Right, Custom_UV)] Stereo("Stereo Mode", Float) = 0
 		[Toggle(STEREO_DEBUG)] _StereoDebug("Stereo Debug Tinting", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
 		[Toggle(USE_YPCBCR)] _UseYpCbCr("Use YpCbCr", Float) = 0
@@ -29,8 +25,7 @@
 			#pragma fragment frag
 			#pragma multi_compile_fog
 			// TODO: replace use multi_compile_local instead (Unity 2019.1 feature)
-			#pragma multi_compile MONOSCOPIC STEREO_TOP_BOTTOM STEREO_LEFT_RIGHT STEREO_CUSTOM_UV STEREO_TWO_TEXTURES
-			#pragma multi_compile FORCEEYE_NONE FORCEEYE_LEFT FORCEEYE_RIGHT
+			#pragma multi_compile MONOSCOPIC STEREO_TOP_BOTTOM STEREO_LEFT_RIGHT STEREO_CUSTOM_UV
 			#pragma multi_compile __ STEREO_DEBUG
 			#pragma multi_compile __ APPLY_GAMMA
 			#pragma multi_compile __ USE_YPCBCR
@@ -70,14 +65,6 @@
 			#endif
 			uniform float4 _MainTex_ST;
 			uniform float4x4 _MainTex_Xfrm;
-			
-			#if STEREO_TWO_TEXTURES
-				uniform sampler2D _MainTex_R;
-				#if USE_YPCBCR
-					uniform sampler2D _ChromaTex_R;
-				#endif
-			#endif
-			
 			uniform fixed4 _Color;
 
 			v2f vert (appdata v)
@@ -96,7 +83,7 @@
 				o.uv.xy = mul(_MainTex_Xfrm, float4(v.uv.xy, 0.0, 1.0)).xy;
 				o.uv.xy = TRANSFORM_TEX(o.uv, _MainTex);
 
-				#if STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT
+				#if STEREO_TOP_BOTTOM | STEREO_LEFT_RIGHT
 					float4 scaleOffset = GetStereoScaleOffset(IsStereoEyeLeft(), _MainTex_ST.y < 0.0);
 					o.uv.xy *= scaleOffset.xy;
 					o.uv.xy += scaleOffset.zw;
@@ -118,33 +105,12 @@
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-				#ifdef UNITY_STEREO_INSTANCING_ENABLED
-					UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-				#endif
-
 				fixed4 col;
-				
-				#if STEREO_TWO_TEXTURES
-					if (IsStereoEyeRight())
-					{
-						// Right eye
-						#if USE_YPCBCR
-							col = SampleYpCbCr(_MainTex_R, _ChromaTex_R, i.uv.xy, _YpCbCrTransform);
-						#else
-							col = SampleRGBA(_MainTex_R, i.uv.xy);
-						#endif
-					}
-					else
+				#if USE_YPCBCR
+					col = SampleYpCbCr(_MainTex, _ChromaTex, i.uv.xy, _YpCbCrTransform);
+				#else
+					col = SampleRGBA(_MainTex, i.uv.xy);
 				#endif
-				{
-					// Left eye
-					#if USE_YPCBCR
-						col = SampleYpCbCr(_MainTex, _ChromaTex, i.uv.xy, _YpCbCrTransform);
-					#else
-						col = SampleRGBA(_MainTex, i.uv.xy);
-					#endif
-				}
-
 				col *= _Color;
 				
 				#if STEREO_DEBUG

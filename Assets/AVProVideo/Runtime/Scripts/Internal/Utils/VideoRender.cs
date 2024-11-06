@@ -101,7 +101,7 @@ namespace RenderHeads.Media.AVProVideo
 		public const string Keyword_StereoTopBottom = "STEREO_TOP_BOTTOM";
 		public const string Keyword_StereoLeftRight = "STEREO_LEFT_RIGHT";
 		public const string Keyword_StereoCustomUV = "STEREO_CUSTOM_UV";
-		public const string Keyword_StereoTwoTextures = "STEREO_TWO_TEXTURES";
+		public const string Keyword_StereoTwoTextures = "STEREO_TWOTEXTURES";
 		public const string Keyword_StereoNone = "MONOSCOPIC";
 		public const string Keyword_StereoDebug = "STEREO_DEBUG";
 		public const string Keyword_LayoutEquirect180 = "LAYOUT_EQUIRECT180";
@@ -112,10 +112,6 @@ namespace RenderHeads.Media.AVProVideo
 		public const string Keyword_ApplyGamma = "APPLY_GAMMA";
 
 		public static readonly LazyShaderProperty PropChromaTex = new LazyShaderProperty("_ChromaTex");
-
-		// Default right-eye texture shader properties		
-		public static readonly LazyShaderProperty PropMainTex_R = new LazyShaderProperty("_MainTex_R");
-		public static readonly LazyShaderProperty PropChromaTex_R = new LazyShaderProperty("_ChromaTex_R");
 
 	#if UNITY_PLATFORM_SUPPORTS_YPCBCR
 		public static readonly LazyShaderProperty PropYpCbCrTransform = new LazyShaderProperty("_YpCbCrTransform");
@@ -352,12 +348,8 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				Texture mainTexture = GetTexture(mediaPlayer, 0);
 				Matrix4x4 textureTransform = Matrix4x4.identity;
-
-				bool isUsingYCbCr = mediaPlayer.IsUsingYCbCr();
-
-				Texture yCbCrTexture = isUsingYCbCr ? GetTexture(mediaPlayer, 1) : null;
+				Texture yCbCrTexture = GetTexture(mediaPlayer, 1);
 				Matrix4x4 yCbCrTransform = Matrix4x4.identity;
-
 				StereoPacking stereoPacking = StereoPacking.None;
 				AlphaPacking alphaPacking = AlphaPacking.None;
 				bool flipY = false;
@@ -376,10 +368,7 @@ namespace RenderHeads.Media.AVProVideo
 				if (textureProducer != null)
 				{
 					flipY = textureProducer.RequiresVerticalFlip();
-					if (isUsingYCbCr)
-					{
-						yCbCrTransform = textureProducer.GetYpCbCrTransform();
-					}
+					yCbCrTransform = textureProducer.GetYpCbCrTransform();
 					stereoPacking = textureProducer.GetTextureStereoPacking();
 					alphaPacking = textureProducer.GetTextureAlphaPacking();
 					textureTransform = textureProducer.GetTextureMatrix();
@@ -391,21 +380,6 @@ namespace RenderHeads.Media.AVProVideo
 				}
 
 				SetupMaterial(material, flipY, isLinear, yCbCrTransform, yCbCrTexture, textureTransform, mediaPlayer.VideoLayoutMapping, stereoPacking, alphaPacking);
-
-				if (stereoPacking == StereoPacking.TwoTextures)
-				{
-#if UNITY_PLATFORM_SUPPORTS_YPCBCR
-					if (isUsingYCbCr)
-					{
-						material.SetTexture(PropMainTex_R.Id, GetTexture(mediaPlayer, 2));
-						material.SetTexture(PropChromaTex_R.Id, GetTexture(mediaPlayer, 3));
-					}
-					else
-#endif
-					{
-						material.SetTexture(PropMainTex_R.Id, GetTexture(mediaPlayer, 1));
-					}
-				}
 			}
 			else
 			{
@@ -535,10 +509,10 @@ namespace RenderHeads.Media.AVProVideo
 
 			if (!targetTexture)
 			{
-				GetCompatibleRenderTextureFormatOptions options = GetCompatibleRenderTextureFormatOptions.ForResolve;
+				ITextureProducer.GetCompatibleRenderTextureFormatOptions options = ITextureProducer.GetCompatibleRenderTextureFormatOptions.ForResolve;
 				if (texture.GetTextureAlphaPacking() != AlphaPacking.None)
 				{
-					options |= GetCompatibleRenderTextureFormatOptions.RequiresAlpha;
+					options |= ITextureProducer.GetCompatibleRenderTextureFormatOptions.RequiresAlpha;
 				}
 				RenderTextureFormat format = texture.GetCompatibleRenderTextureFormat(options);
 				RenderTextureReadWrite readWrite = ((flags & ResolveFlags.ColorspaceSRGB) == ResolveFlags.ColorspaceSRGB) ? RenderTextureReadWrite.sRGB : RenderTextureReadWrite.Linear;

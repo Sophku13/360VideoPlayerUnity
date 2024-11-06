@@ -2,7 +2,7 @@
 // Copyright 2015-2024 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
-#if UNITY_2017_2_OR_NEWER && (UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || (!UNITY_EDITOR && (UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_ANDROID)))
+#if UNITY_2017_2_OR_NEWER && ( UNITY_EDITOR_OSX || ( !UNITY_EDITOR && ( UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_ANDROID ) ) )
 
 using System;
 using System.Runtime.InteropServices;
@@ -60,35 +60,6 @@ namespace RenderHeads.Media.AVProVideo
 
 			// Force an update to get our state in sync with the native
 			Update();
-		}
-
-		/// <summary>
-		/// Check to see if the player is using the OES texture fast path (Android only)
-		/// </summary>
-		/// <returns>True if using the OES texture fast path</returns>
-		public bool IsUsingOESFastpath()
-		{
-			#if !UNITY_EDITOR && UNITY_ANDROID
-				if (_playerTexture.planeCount > 0)
-				{
-					return _playerTexture.planes[0].textureFormat == Native.AVPPlayerTextureFormat.AndroidOES;
-				}
-				else
-				{
-					return _playerSettings.pixelFormat == Native.AVPPlayerVideoPixelFormat.YCbCr420;
-				}
-			#else
-				return false;
-			#endif
-		}
-
-		/// <summary>
-		/// Check to see if the player is using a YCbCr pixel format
-		/// </summary>
-		/// <returns>True if using a YCbCr pixel format, false otherwise</returns>
-		public bool IsUsingYCbCr()
-		{
-			return (_playerTexture.flags & Native.AVPPlayerTextureFlags.YCbCr) == Native.AVPPlayerTextureFlags.YCbCr;
 		}
 
 		/// <summary>
@@ -291,7 +262,7 @@ namespace RenderHeads.Media.AVProVideo
 	// IMediaPlayer
 	public sealed partial class PlatformMediaPlayer
 	{
-		private const int MaxTexturePlanes = 4;
+		private const int MaxTexturePlanes = 2;
 		private Native.AVPPlayerState _state = new Native.AVPPlayerState();
 		private Native.AVPPlayerFlags _flags = Native.AVPPlayerFlags.None;
 		private Native.AVPPlayerAssetInfo _assetInfo = new Native.AVPPlayerAssetInfo();
@@ -445,27 +416,19 @@ namespace RenderHeads.Media.AVProVideo
 							break;
 					}
 
-					// If there is no native texture release Unity's texture instance
-					if (_playerTexture.planes[i].plane == IntPtr.Zero)
-					{
-						_texturePlanes[i] = null;
-					}
-					else
-					// If we need to (re)create the texture
 					if (_texturePlanes[i] == null ||
 						_texturePlanes[i].width != _playerTexture.planes[i].width ||
 						_texturePlanes[i].height != _playerTexture.planes[i].height ||
 						_texturePlanes[i].format != textureFormat)
 					{
-						// Ensure the existing texture is released
+#if !UNITY_ANDROID
+						// Ensure any existing texture is released.
 						if (_texturePlanes[i] != null)
 						{
-#if !UNITY_ANDROID
 							_texturePlanes[i].UpdateExternalTexture(IntPtr.Zero);
-#endif
 							_texturePlanes[i] = null;
 						}
-
+#endif
 						_texturePlanes[i] = Texture2D.CreateExternalTexture(
 							_playerTexture.planes[i].width,
 							_playerTexture.planes[i].height,
@@ -474,11 +437,9 @@ namespace RenderHeads.Media.AVProVideo
 							_playerTexture.flags.IsLinear(),
 							_playerTexture.planes[i].plane
 						);
-						
 						base.ApplyTextureProperties(_texturePlanes[i]);
 					}
 					else
-					// Just update the texture with the new native texture
 					{
 						_texturePlanes[i].UpdateExternalTexture(_playerTexture.planes[i].plane);
 					}
@@ -614,7 +575,6 @@ namespace RenderHeads.Media.AVProVideo
 		public override void Render()
 		{
 			Graphics.ExecuteCommandBuffer(_renderCommandBuffer);
-			GL.InvalidateState();
 		}
 
 		public override IntPtr GetNativePlayerHandle()
@@ -683,9 +643,8 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			Native.AVPPlayerClose(_player);
 			Update();
-
+#if !UNITY_ANDROID
 			// Clean up the textures
-			#if !UNITY_ANDROID
 			for (int i = 0; i < MaxTexturePlanes; ++i)
 			{
 				if (_texturePlanes[i] != null)
@@ -694,8 +653,8 @@ namespace RenderHeads.Media.AVProVideo
 					_texturePlanes[i] = null;
 				}
 			}
-			#endif
-			_playerTexture.frameCounter = 0;
+			_playerTexture.frameCount = 0;
+#endif
 		}
 
 		public override void SetLooping(bool b)
@@ -1074,7 +1033,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override int GetTextureFrameCount()
 		{
-			return _playerTexture.frameCounter;
+			return _playerTexture.frameCount;
 		}
 
 		public override bool SupportsTextureFrameCount()
@@ -1113,11 +1072,11 @@ namespace RenderHeads.Media.AVProVideo
 				return Matrix4x4.identity;
 		}
 
-        public override RenderTextureFormat GetCompatibleRenderTextureFormat(GetCompatibleRenderTextureFormatOptions options, int plane)
+        public override RenderTextureFormat GetCompatibleRenderTextureFormat(ITextureProducer.GetCompatibleRenderTextureFormatOptions options, int plane)
         {
 			// Pull out the options
-			bool forResolve = (options & GetCompatibleRenderTextureFormatOptions.ForResolve) == GetCompatibleRenderTextureFormatOptions.ForResolve;
-			bool requiresAlpha = (options & GetCompatibleRenderTextureFormatOptions.RequiresAlpha) == GetCompatibleRenderTextureFormatOptions.RequiresAlpha;
+			bool forResolve = (options & ITextureProducer.GetCompatibleRenderTextureFormatOptions.ForResolve) == ITextureProducer.GetCompatibleRenderTextureFormatOptions.ForResolve;
+			bool requiresAlpha = (options & ITextureProducer.GetCompatibleRenderTextureFormatOptions.RequiresAlpha) == ITextureProducer.GetCompatibleRenderTextureFormatOptions.RequiresAlpha;
 
 			// Validate plane
 			if (plane < 0 || plane >= _playerTexture.planeCount)
@@ -1147,7 +1106,6 @@ namespace RenderHeads.Media.AVProVideo
 				case Native.AVPPlayerTextureFormat.BC1:
 				case Native.AVPPlayerTextureFormat.BC3:
 				case Native.AVPPlayerTextureFormat.BC7:
-				case Native.AVPPlayerTextureFormat.AndroidOES:
 					renderTextureFormat = RenderTextureFormat.ARGB32;
 					break;
 
@@ -1290,8 +1248,6 @@ namespace RenderHeads.Media.AVProVideo
 						return StereoPacking.Unknown;
 					case Native.AVPPlayerVideoTrackStereoMode.StereoscopicCustom:
 						return StereoPacking.CustomUV;
-					case Native.AVPPlayerVideoTrackStereoMode.StereoscopicTwoTextures:
-						return StereoPacking.TwoTextures;
 				}
 			}
 			return StereoPacking.Unknown;

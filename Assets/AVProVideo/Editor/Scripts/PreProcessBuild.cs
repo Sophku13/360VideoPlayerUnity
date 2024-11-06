@@ -78,13 +78,6 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					message += "\n\nPlease go to Player Settings > Auto Graphics API and remove Vulkan from the list.";
 					ShowAbortDialog(message);
 				}
-				else
-				{
-#if !UNITY_2020_1_OR_NEWER
-					string message = "Vulkan graphics API is not supported by AVPro Video in Unity 2019 and lower.";
-					ShowAbortDialog( message );
-#endif
-				}
 			}
 		}
 

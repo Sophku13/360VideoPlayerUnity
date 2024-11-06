@@ -163,7 +163,7 @@ namespace RenderHeads.Media.AVProVideo
 			return xfrm;
 		}
 		/// <inheritdoc/>
-		public virtual RenderTextureFormat GetCompatibleRenderTextureFormat(GetCompatibleRenderTextureFormatOptions options, int plane)
+		public virtual RenderTextureFormat GetCompatibleRenderTextureFormat(ITextureProducer.GetCompatibleRenderTextureFormatOptions options, int plane)
 		{
 			// Just return the default
 			return RenderTextureFormat.Default;

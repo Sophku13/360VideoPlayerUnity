@@ -14,85 +14,41 @@ namespace RenderHeads.Media.AVProVideo
 	public abstract class ApplyToBase : MonoBehaviour
 	{
 		[Header("Media Source")]
-		[SerializeField]
-		protected MediaPlayer _media = null;
+		[Space(8f)]
+
+		[SerializeField] protected MediaPlayer _media = null;
 
 		public MediaPlayer Player
 		{
-			get
-			{
-				return _media;
-			}
-			set
-			{
-				ChangeMediaPlayer(value);
-			}
+			get { return _media; }
+			set { ChangeMediaPlayer(value); }
 		}
 
 		[Space(8f)]
 		[Header("Display")]
-		[SerializeField]
-		bool _automaticStereoPacking = true;
-		
+
+		[SerializeField] bool _automaticStereoPacking = true;
 		public bool AutomaticStereoPacking
 		{
-			get
-			{
-				return _automaticStereoPacking;
-			}
-			set
-			{
-				if (_automaticStereoPacking != value)
-				{
-					_automaticStereoPacking = value;
-					_isDirty = true;
-				}
-			}
+			get { return _automaticStereoPacking; }
+			set { if (_automaticStereoPacking != value) { _automaticStereoPacking = value; _isDirty = true; } }
 		}
 
-		[SerializeField]
-		StereoPacking _overrideStereoPacking = StereoPacking.None;
-		
+		[SerializeField] StereoPacking _overrideStereoPacking = StereoPacking.None;
 		public StereoPacking OverrideStereoPacking
 		{
-			get
-			{
-				return _overrideStereoPacking;
-			}
-			set
-			{
-				if (_overrideStereoPacking != value)
-				{
-					_overrideStereoPacking = value;
-					_isDirty = true;
-				}
-			}
+			get { return _overrideStereoPacking; }
+			set { if (_overrideStereoPacking != value) { _overrideStereoPacking = value; _isDirty = true; } }
 		}
 
-		[SerializeField]
-		bool _stereoRedGreenTint = false;
-		
-		public bool StereoRedGreenTint
-		{
-			get
-			{
-				return _stereoRedGreenTint;
-			}
-			set
-			{
-				if (_stereoRedGreenTint != value)
-				{
-					_stereoRedGreenTint = value;
-					_isDirty = true;
-				}
-			}
-		}
+		[SerializeField] bool _stereoRedGreenTint = false;
+		public bool StereoRedGreenTint { get { return _stereoRedGreenTint; } set { if (_stereoRedGreenTint != value) { _stereoRedGreenTint = value; _isDirty = true; } } }
 
 		protected bool _isDirty = false;
 
 		void Awake()
 		{
-			ChangeMediaPlayer(_media, force: true);
+			ChangeMediaPlayer(_media, force:true);
 		}
 
 		private void ChangeMediaPlayer(MediaPlayer player, bool force = false)
@@ -157,12 +113,10 @@ namespace RenderHeads.Media.AVProVideo
 
 		protected virtual void SaveProperties()
 		{
-
 		}
 
 		protected virtual void RestoreProperties()
 		{
-
 		}
 
 		public abstract void Apply();

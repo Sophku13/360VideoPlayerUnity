@@ -27,51 +27,6 @@ using Windows.Storage.Streams;
 
 namespace RenderHeads.Media.AVProVideo
 {
-	public class AuthData
-	{
-		public string URL { get; set; }
-		public string Token { get; set; }
-		public byte[] KeyBytes { get; set; }
-
-		public AuthData()
-		{
-			Clear();
-		}
-
-		public void Clear()
-		{
-			URL = string.Empty;
-			Token = string.Empty;
-			KeyBytes = null;
-		}
-
-		public string KeyBase64
-		{
-			get
-			{
-				if (KeyBytes != null)
-				{
-					return System.Convert.ToBase64String(KeyBytes);
-				}
-				else
-				{
-					return string.Empty;
-				}
-			}
-			set
-			{
-				if (value != null)
-				{
-					KeyBytes = System.Convert.FromBase64String(value);
-				}
-				else
-				{
-					KeyBytes = null;
-				}
-			}
-		}
-	};
-
 	/// <summary>
 	/// Windows desktop and UWP implementation of BaseMediaPlayer
 	/// </summary>
@@ -348,16 +303,11 @@ namespace RenderHeads.Media.AVProVideo
 				((_audioOutput == Windows.AudioOutput.Unity) ? Helper.GetUnityAudioSampleRate() : 0),
 				filters,
 				filterCount,
-				(int)_audio360ChannelMode,
-				httpHeader,
-				startWithHighestBitrate
+				(int)_audio360ChannelMode
 			);
 
 			if (_instance != System.IntPtr.Zero)
 			{
-				// Force setting any auth data as it wouldn't have been set without a _instance
-				AuthenticationData = _nextAuthData;
-
 				Native.SetCustomMovParserEnabled(_instance, _useCustomMovParser);
 				Native.SetHapNotchLCEnabled(_instance, _useHapNotchLC);
 #if AVPROVIDEO_SUPPORT_BUFFERED_DISPLAY
@@ -399,8 +349,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override bool OpenMediaFromBuffer(byte[] buffer)
 		{
-			// RJT NOTE: Commented out as already called by 'InternalOpenMedia()' which calls this function
-//			CloseMedia();
+			CloseMedia();
 
 			IntPtr[] filters;
 			if (_preferredFilters.Count == 0)
@@ -1138,22 +1087,19 @@ namespace RenderHeads.Media.AVProVideo
 				switch (dxgiTextureFormat)
 				{
 					default:
-//					case 3:		// 'BGRA8'
+//					case /*2*/3:	// 'BGRA8'
 						break;
-					case 5:		// 'RGBA16'
+					case /*22*/5:	// 'RGBA16'
 						textureFormat = TextureFormat.RGBA64;
 						break;
-					case 4:		// 'RGBA10'
+					case /*11*/4:	// 'RGBA10'
 						textureFormat = TextureFormat.RGB24;//ETC_RGB4;
 						break;
-					case 8:		// 'DXT1'
+					case /*6*/8:	// 'DXT1'
 						textureFormat = TextureFormat.DXT1;
 						break;
-					case 9:		// 'DXT5'
+					case /*7*/9:	// 'DXT5'
 						textureFormat = TextureFormat.DXT5;
-						break;
-					case 12:	// 'BC7'
-						textureFormat = TextureFormat.BC7;
 						break;
 				}
 
@@ -1402,40 +1348,6 @@ namespace RenderHeads.Media.AVProVideo
 			return result;
 		}
 
-		// Auth data
-
-		private AuthData _nextAuthData = new AuthData();
-		public AuthData AuthenticationData
-		{ 
-			get 
-			{ 
-				return _nextAuthData;
-			}
-			set
-			{
-				_nextAuthData = value;
-				Native.SetNextAuthData(_instance, _nextAuthData);
-			}
-		}
-
-/*		public override void SetKeyServerURL(string url)
-		{
-			_nextAuthData.URL = url;
-			AuthenticationData = _nextAuthData;	
-		}*/
-
-		public override void SetKeyServerAuthToken(string token)
-		{
-			_nextAuthData.Token = token;
-			AuthenticationData = _nextAuthData;	
-		}
-
-		public override void SetOverrideDecryptionKey(byte[] key)
-		{
-			_nextAuthData.KeyBytes = key;
-			AuthenticationData = _nextAuthData;	
-		}
-
 		/*private Native.PlayerState _playerState = new Native.PlayerState();
 		private Native.AssetInfo _assetInfo = new Native.AssetInfo();*/
 
@@ -1576,7 +1488,7 @@ namespace RenderHeads.Media.AVProVideo
 			public static extern System.IntPtr BeginOpenSource(System.IntPtr instance, Windows.VideoApi videoApi, Windows.AudioOutput audioOutput, bool useHardwareDecoding, bool useRendererSync,
 				bool generateTextureMips, bool hintAlphaChannel, bool useLowLatency, bool use10BitTextures, [MarshalAs(UnmanagedType.LPWStr)]string forceAudioOutputDeviceName,
 				int unitySampleRate, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPWStr)]IntPtr[] preferredFilter, uint numFilters,
-				int audio360ChannelMode, [MarshalAs(UnmanagedType.LPWStr)] string httpHeader, bool startWithHighestBitrate);
+				int audio360ChannelMode);
 
 			[DllImport("AVProVideo")]
 			public static extern System.IntPtr EndOpenSource(System.IntPtr instance, [MarshalAs(UnmanagedType.LPWStr)]string path);
@@ -1835,49 +1747,6 @@ namespace RenderHeads.Media.AVProVideo
 
 			[DllImport("AVProVideo")]
 			public static extern void SetAudioFocusRotation(System.IntPtr instance, float x, float y, float z, float w);
-
-			// Auth data
-
-			public static void SetNextAuthData(System.IntPtr instance, RenderHeads.Media.AVProVideo.AuthData srcAuthData)
-			{		
-				Native.AuthData ad = new Native.AuthData();
-				ad.url = string.IsNullOrEmpty(srcAuthData.URL) ? null : srcAuthData.URL;
-				ad.token = string.IsNullOrEmpty(srcAuthData.Token) ? null : srcAuthData.Token;
-				if (srcAuthData.KeyBytes != null && srcAuthData.KeyBytes.Length > 0)
-				{
-					ad.keyBytes = Marshal.AllocHGlobal(srcAuthData.KeyBytes.Length);
-					Marshal.Copy(srcAuthData.KeyBytes, 0, ad.keyBytes, srcAuthData.KeyBytes.Length);
-					ad.keyBytesLength = srcAuthData.KeyBytes.Length;
-				}
-				else
-				{
-					ad.keyBytes = System.IntPtr.Zero;
-					ad.keyBytesLength = 0;
-				}
-
-				SetNextAuthData(instance, ref ad);
-
-				if (ad.keyBytes != System.IntPtr.Zero)
-				{
-					Marshal.FreeHGlobal(ad.keyBytes);
-				}
-			}
-
-			[StructLayout(LayoutKind.Sequential, Pack = 1)]
-			public struct AuthData
-			{
-				[MarshalAs(UnmanagedType.LPWStr)]
-				public string url;
-
-				[MarshalAs(UnmanagedType.LPWStr)]
-				public string token;
-
-				public System.IntPtr keyBytes;
-				public int keyBytesLength;
-			};
-
-			[DllImport("AVProVideo")]
-			private static extern void SetNextAuthData(System.IntPtr instance, ref AuthData authData);
 		}
 	}
 }

@@ -5,8 +5,6 @@
 #define AVPRO_PACKAGE_UNITYUI
 #if (UNITY_2019_2_OR_NEWER && AVPRO_PACKAGE_UNITYUI) || (!UNITY_2019_2_OR_NEWER)
 
-#define SHOW_TRACK_INFO_IN_DEBUG_VIEW
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,7 +28,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 		[SerializeField] float _keyVolumeDelta = 0.05f;
 		[SerializeField] float _jumpDeltaTime = 5f;
 		[SerializeField] bool _showOptions = true;
-		[SerializeField] bool _showDebug = false;
 		[SerializeField] bool _autoHide = true;
 		[SerializeField] float _userInactiveDuration = 1.5f;
 		[SerializeField] bool _useAudioFading = true;
@@ -55,7 +52,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 		[SerializeField] Slider _sliderTime = null;
 		[SerializeField] EventTrigger _videoTouch = null;
 		[SerializeField] CanvasGroup _controlsGroup = null;
-		[SerializeField] OptionsMenu _optionsMenu = null;
 
 		[Header("UI Components (Optional)")]
 		[SerializeField] GameObject _liveItem = null;
@@ -66,10 +62,10 @@ namespace RenderHeads.Media.AVProVideo.Demos
 		[SerializeField] Button _buttonVolume = null;
 		[SerializeField] Button _buttonSubtitles = null;
 		[SerializeField] Button _buttonOptions = null;
-		[SerializeField] Button _buttonDebug = null;
 		[SerializeField] Button _buttonTimeBack = null;
 		[SerializeField] Button _buttonTimeForward = null;
 		[SerializeField] RawImage _imageAudioSpectrum = null;
+		[SerializeField] GameObject _optionsMenuRoot = null;
 		[SerializeField] HorizontalSegmentsPrimitive _segmentsSeek = null;
 		[SerializeField] HorizontalSegmentsPrimitive _segmentsBuffered = null;
 		[SerializeField] HorizontalSegmentsPrimitive _segmentsProgress = null;
@@ -123,7 +119,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			SetupVolumeButton();
 			SetupSubtitlesButton();
 			SetupOptionsButton();
-			SetupDebugButton();
 			SetupAudioSpectrum();
 			CreateTimelineDragEvents();
 			CreateVideoTouchEvents();
@@ -217,14 +212,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			}
 		}
 
-		private void SetupDebugButton()
-		{
-			if (_buttonDebug)
-			{
-				_buttonDebug.onClick.AddListener(OnDebugButtonPressed);
-			}
-		}
-
 		private void SetupAudioSpectrum()
 		{
 			if (_imageAudioSpectrum)
@@ -263,11 +250,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			ToggleOptionsMenu();
 		}
 
-		private void OnDebugButtonPressed()
-		{
-			ToggleDebugMenu();
-		}
-
 		private bool _isHoveringOverTimeline;
 
 		private void OnTimelineBeginHover(PointerEventData eventData)
@@ -295,14 +277,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 
 		private void OnVideoPointerUp()
 		{
-			// Toggle options off
-			if( _showOptions )
-			{
-				ToggleOptionsMenu();
-				return;
-			}
-
-			// Else, maybe, play/pause
 			bool controlsMostlyVisible = (_controlsGroup.alpha >= 0.5f && _controlsGroup.gameObject.activeSelf);
 			if (controlsMostlyVisible)
 			{
@@ -481,7 +455,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			{
 				if (_mediaPlayer.TextTracks.GetTextTracks().Count > 0)
 				{
-					int iNewTrackIndex = 0;
 					if (_mediaPlayer.TextTracks.GetActiveTextTrack() != null)
 					{
 						_mediaPlayer.TextTracks.SetActiveTextTrack(null);
@@ -491,12 +464,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 						// TODO: instead of activating the first one, base it on the language/track 
 						// selection stored in the MediaPlayerUI
 						_mediaPlayer.TextTracks.SetActiveTextTrack(_mediaPlayer.TextTracks.GetTextTracks()[0]);
-						iNewTrackIndex = 1;
-					}
-
-					if( _optionsMenu )
-					{
-						_optionsMenu.ChangeSubtitleTrack( iNewTrackIndex );
 					}
 				}
 			}
@@ -508,23 +475,15 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			BuildOptionsMenu();
 		}
 
-		private void ToggleDebugMenu()
-		{
-			_showDebug = !_showDebug;
-
-#if true
-			// Temporary code for now disables to touch controls while the debug menu
-			// is shown, to stop it consuming mouse input for IMGUI
-			_videoTouch.enabled = !_showDebug;
-#endif
-		}
-
 		private void BuildOptionsMenu()
 		{
-			if( _optionsMenu )
+			if (_optionsMenuRoot)
 			{
-				_optionsMenu.SetActive( _showOptions );
+				_optionsMenuRoot.SetActive(_showOptions);
 			}
+			// Temporary code for now disables to touch controls while the debug menu
+			// is shown, to stop it consuming mouse input for IMGUI
+			_videoTouch.enabled = !_showOptions;
 		}
 
 		private void CreateTimelineDragEvents()
@@ -1021,16 +980,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 					string resolutionName = string.Empty;
 					if (_mediaPlayer.Info.GetVideoWidth() > 0)
 					{
-//						resolutionName = Helper.GetFriendlyResolutionName(_mediaPlayer.Info.GetVideoWidth(), _mediaPlayer.Info.GetVideoHeight(), _mediaPlayer.Info.GetVideoFrameRate());
-						float fps = _mediaPlayer.Info.GetVideoFrameRate();
-						if( fps > 0.0f && !float.IsNaN(fps) )
-						{
-							resolutionName = string.Format("{0} x {1} @ {2}", _mediaPlayer.Info.GetVideoWidth(), _mediaPlayer.Info.GetVideoHeight(), fps.ToString("0.00"));
-						}
-						else
-						{
-							resolutionName = string.Format("{0} x {1}", _mediaPlayer.Info.GetVideoWidth(), _mediaPlayer.Info.GetVideoHeight());
-						}
+						resolutionName = Helper.GetFriendlyResolutionName(_mediaPlayer.Info.GetVideoWidth(), _mediaPlayer.Info.GetVideoHeight(), _mediaPlayer.Info.GetVideoFrameRate());						
 					}
 
 					#if MEDIA_NAME
@@ -1077,14 +1027,9 @@ namespace RenderHeads.Media.AVProVideo.Demos
 
 		void OnGUI()
 		{
-			if (!_showDebug)
-			{
-				return;
-			}
-			if (!_mediaPlayer || _mediaPlayer.Control == null)
-			{
-				return;
-			}
+			// NOTE: These this IMGUI is just temporary until we implement the UI using uGUI
+			if (!_showOptions) return;
+			if (!_mediaPlayer || _mediaPlayer.Control == null) return;
 
 			GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(2f, 2f, 1f));
 
@@ -1092,8 +1037,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			GUILayout.BeginVertical(GUI.skin.box);
 			GUI.backgroundColor = Color.white;
 
-			GUILayout.Label( string.Format("Duration: {0}s\tFPS: {1}", _mediaPlayer.Info.GetDuration(), _mediaPlayer.Info.GetVideoDisplayRate().ToString("F2")));
-
+			GUILayout.Label("Duration " + _mediaPlayer.Info.GetDuration() + "s");
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("States: ");
 			GUILayout.Toggle(_mediaPlayer.Control.HasMetaData(), "HasMetaData", GUI.skin.button);
@@ -1120,7 +1064,6 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			}
 
 
-#if SHOW_TRACK_INFO_IN_DEBUG_VIEW
 			{
 				GUILayout.Label("Video Tracks: " + _mediaPlayer.VideoTracks.GetVideoTracks().Count);
 
@@ -1187,12 +1130,10 @@ namespace RenderHeads.Media.AVProVideo.Demos
 					_mediaPlayer.TextTracks.SetActiveTextTrack(selectedTrack);
 				}
 			}
-#else
-			GUILayout.Label( string.Format("Video Tracks: {0}\tAudio Tracks: {1}\tText Tracks: {2}", _mediaPlayer.VideoTracks.GetVideoTracks().Count, _mediaPlayer.AudioTracks.GetAudioTracks().Count, _mediaPlayer.TextTracks.GetTextTracks().Count) );
-
-#endif
-
-#if ( UNITY_STANDALONE_WIN )
+			{
+				GUILayout.Label("FPS: " + _mediaPlayer.Info.GetVideoDisplayRate().ToString("F2"));
+			}
+#if (UNITY_STANDALONE_WIN)
 			if (_mediaPlayer.PlatformOptionsWindows.bufferedFrameSelection != BufferedFrameSelectionMode.None)
 			{
 				IBufferedDisplay bufferedDisplay = _mediaPlayer.BufferedDisplay;

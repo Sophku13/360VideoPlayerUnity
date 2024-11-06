@@ -1,7 +1,5 @@
-﻿//#define AVPROVIDEO_WINDOWS_UNIFIED_DLLS		// DEV FEATURE: are we using new unified (DS + MF + WRT) Windows DLLs?
-//
-// NOTE: We only allow this script to compile in editor so we can easily check for compilation issues
-#if ((UNITY_EDITOR || (UNITY_STANDALONE_WIN || UNITY_WSA_10_0)) && !AVPROVIDEO_WINDOWS_UNIFIED_DLLS)
+﻿// NOTE: We only allow this script to compile in editor so we can easily check for compilation issues
+#if (UNITY_EDITOR || (UNITY_STANDALONE_WIN || UNITY_WSA_10_0))
 
 #if UNITY_WSA_10 || ENABLE_IL2CPP
 	#define AVPROVIDEO_MARSHAL_RETURN_BOOL
@@ -30,6 +28,51 @@ namespace RenderHeads.Media.AVProVideo
 
 		Seeking = 32,
 	}
+
+	public class AuthData
+	{
+		public string URL { get; set; }
+		public string Token { get; set; }
+		public byte[] KeyBytes { get; set; }
+
+		public AuthData()
+		{
+			Clear();
+		}
+
+		public void Clear()
+		{
+			URL = string.Empty;
+			Token = string.Empty;
+			KeyBytes = null;
+		}
+
+		public string KeyBase64
+		{
+			get
+			{
+				if (KeyBytes != null)
+				{
+					return System.Convert.ToBase64String(KeyBytes);
+				}
+				else
+				{
+					return string.Empty;
+				}
+			}
+			set
+			{
+				if (value != null)
+				{
+					KeyBytes = System.Convert.FromBase64String(value);
+				}
+				else
+				{
+					KeyBytes = null;
+				}
+			}
+		}
+	};
 
 	public partial class WindowsRtMediaPlayer : BaseMediaPlayer
 	{

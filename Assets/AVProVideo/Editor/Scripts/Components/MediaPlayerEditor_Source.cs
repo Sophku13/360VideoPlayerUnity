@@ -234,13 +234,9 @@ namespace RenderHeads.Media.AVProVideo.Editor
 
 				if (fullPath.Contains("://"))
 				{
-					if (fullPath.ToLower().Contains("rtsp://"))
-					{
-						EditorHelper.IMGUI.NoticeBox(MessageType.Warning, "RTMP protocol is not supported by AVPro Video, except when Windows DirectShow is used with an external codec library (eg LAV Filters) and Android (limited functionality when using the MediaPlayer API)");
-					}
 					if (fullPath.ToLower().Contains("rtmp://"))
 					{
-						EditorHelper.IMGUI.NoticeBox(MessageType.Warning, "RTMP protocol is not supported by AVPro Video, except when Windows DirectShow is used with an external codec library (eg LAV Filters) and Android when ExoPlayer is used");
+						EditorHelper.IMGUI.NoticeBox(MessageType.Warning, "RTMP protocol is not supported by AVPro Video, except when Windows DirectShow is used with an external codec library (eg LAV Filters)");
 					}
 					if (fullPath.ToLower().Contains("youtube.com/watch"))
 					{

@@ -61,8 +61,7 @@ INLINE bool IsStereoEyeLeft()
 	return true;
 #elif defined(FORCEEYE_RIGHT)
 	return false;
-#elif defined(STEREO_TWO_TEXTURES)
-	return unity_StereoEyeIndex == 0;
+//#elif defined(USING_STEREO_MATRICES) || defined(XR_USE_BUILT_IN_EYE_VARIABLE)
 #elif defined(USING_STEREO_MATRICES)
 	// Unity 5.4 has this new variable
 	return (unity_StereoEyeIndex == 0);
@@ -84,11 +83,6 @@ INLINE bool IsStereoEyeLeft()
 	float fR = distance(_WorldCameraPosition + _WorldCameraRight, renderCameraPos);
 	return (fL < fR);
 #endif
-}
-
-INLINE bool IsStereoEyeRight()
-{
-	return !IsStereoEyeLeft();
 }
 
 #if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
@@ -139,16 +133,26 @@ INLINE FLOAT4 GetStereoDebugTint(bool isLeftEye)
 {
 	FLOAT4 tint = FLOAT4(1.0, 1.0, 1.0, 1.0);
 
-	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT) || defined(STEREO_CUSTOM_UV) || defined(STEREO_TWO_TEXTURES)
-		if (isLeftEye)
-		{
-			tint = FLOAT4(0.0, 1.0, 0.0, 1.0);;
-		}
-		else
-		{
-			tint = FLOAT4(1.0, 0.0, 0.0, 1.0);
-		}
-	#endif
+#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT) || defined(STEREO_CUSTOM_UV)
+	FLOAT4 leftEyeColor = FLOAT4(0.0, 1.0, 0.0, 1.0);		// green
+	FLOAT4 rightEyeColor = FLOAT4(1.0, 0.0, 0.0, 1.0);		// red
+
+	if (isLeftEye)
+	{
+		tint = leftEyeColor;
+	}
+	else
+	{
+		tint = rightEyeColor;
+	}
+#endif
+
+#if defined(UNITY_UV_STARTS_AT_TOP)
+	//tint.b = 0.5;
+#endif
+/*#if defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED) || defined(UNITY_DECLARE_MULTIVIEW)
+	tint.b = 1.0;
+#endif*/
 
 	return tint;
 }

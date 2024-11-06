@@ -535,7 +535,7 @@ namespace RenderHeads.Media.AVProVideo
 
 
 			public Android.VideoApi videoApi = Android.VideoApi.ExoPlayer;
-			public bool showPosterFrame = false;	// NOTE 2024.09.26: DEPRECATED
+//			public bool showPosterFrame = false;
 			public Audio360ChannelMode audio360ChannelMode = Audio360ChannelMode.TBE_8_2;
 			public int audio360LatencyMS = 0;
 			public bool preferSoftwareDecoder = false;

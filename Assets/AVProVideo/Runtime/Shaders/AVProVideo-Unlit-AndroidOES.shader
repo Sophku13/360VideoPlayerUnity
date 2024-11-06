@@ -7,7 +7,6 @@
 		_Color("Main Color", Color) = (1,1,1,1)			// For fallback shader
 
 		[KeywordEnum(None, Top_Bottom, Left_Right)] Stereo("Stereo Mode", Float) = 0
-		[KeywordEnum(None, Left, Right)] ForceEye ("Force Eye Mode", Float) = 0
 		[Toggle(STEREO_DEBUG)] _StereoDebug("Stereo Debug Tinting", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
 		[Toggle(USE_YPCBCR)] _UseYpCbCr("Use YpCbCr", Float) = 0
@@ -26,7 +25,6 @@
 			#pragma only_renderers gles3
 			// TODO: replace use multi_compile_local instead (Unity 2019.1 feature)
 			#pragma multi_compile MONOSCOPIC STEREO_TOP_BOTTOM STEREO_LEFT_RIGHT STEREO_CUSTOM_UV
-			#pragma multi_compile FORCEEYE_NONE FORCEEYE_LEFT FORCEEYE_RIGHT
 			#pragma multi_compile __ APPLY_GAMMA
 			#pragma multi_compile __ USING_DEFAULT_TEXTURE
 			#pragma multi_compile __ STEREO_DEBUG
@@ -55,11 +53,7 @@
 
 			INLINE bool Android_IsStereoEyeLeft()
 			{
-				#if defined(FORCEEYE_LEFT)
-					return true;
-				#elif defined(FORCEEYE_RIGHT)
-					return false;
-				#elif defined(STEREO_MULTIVIEW_ON)
+				#if defined(STEREO_MULTIVIEW_ON)
 					int eyeIndex = SetupStereoEyeIndex();
 					return (eyeIndex == 0);
 				#else

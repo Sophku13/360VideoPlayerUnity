@@ -10,13 +10,13 @@ namespace RenderHeads.Media.AVProVideo
 {
 	public static class Helper
 	{
-		public const string AVProVideoVersion = "3.1.2";
+		public const string AVProVideoVersion = "3.0.10";
 		public sealed class ExpectedPluginVersion
 		{
-			public const string Windows      = "3.1.0";
-			public const string WinRT        = "3.1.0";
-			public const string Android      = "3.1.2";
-			public const string Apple        = "3.1.1";
+			public const string Windows      = "3.0.10";
+			public const string WinRT        = "3.0.10";
+			public const string Android      = "3.0.10";
+			public const string Apple        = "3.0.8";
 		}
 
 		public const string UnityBaseTextureName = "_MainTex";
@@ -366,11 +366,7 @@ namespace RenderHeads.Media.AVProVideo
 			frame = Mathf.Max(0, frame);
 			frameRate = Mathf.Max(0f, frameRate);
 			double frameDurationSeconds = 1.0 / frameRate;
-#if !UNITY_EDITOR && UNITY_ANDROID
-			return ((double)frame * frameDurationSeconds) + (frameDurationSeconds * 0.01);		// #1999 : Need to bump on the value a little, but not a whole half frame time, to avoid float inaccuracy error
-#else
-			return ((double)frame * frameDurationSeconds) + (frameDurationSeconds * 0.5);       // Add half a frame we that the time lands in the middle of the frame range and not at the edges
-#endif
+			return ((double)frame * frameDurationSeconds) + (frameDurationSeconds * 0.5);		// Add half a frame we that the time lands in the middle of the frame range and not at the edges
 		}
 
 		public static double FindNextKeyFrameTimeSeconds(double seconds, float frameRate, int keyFrameInterval)

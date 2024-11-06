@@ -52,11 +52,7 @@
 
 			INLINE bool Android_IsStereoEyeLeft()
 			{
-				#if defined(FORCEEYE_LEFT)
-					return true;
-				#elif defined(FORCEEYE_RIGHT)
-					return false;
-				#elif defined(STEREO_MULTIVIEW_ON)
+				#if defined(STEREO_MULTIVIEW_ON)
 					int eyeIndex = SetupStereoEyeIndex();
 					return (eyeIndex == 0);
 				#else
@@ -114,7 +110,6 @@
 
 				// Set value for clipping if UV area is behind viewer
 				texVal.z = (gl_MultiTexCoord0.x > 0.25 && gl_MultiTexCoord0.x < 0.75) ? 1.0 : -1.0;
-				texVal.z = -gl_Normal.z;
 	#else
 				texVal.z = 0.0;
 	#endif
@@ -321,8 +316,7 @@
 					featherDirection.z *= 0.5;
 #endif
 
-//					float d = min(uv.x - featherDirection.x, min((uv.y - featherDirection.y), min(featherDirection.z - uv.x, featherDirection.w - uv.y)));
-					float d = (uv.x - featherDirection.x) * (uv.y - featherDirection.y) * (featherDirection.z - uv.x) * (featherDirection.w - uv.y) * 10.0;
+					float d = min(uv.x - featherDirection.x, min((uv.y - featherDirection.y), min(featherDirection.z - uv.x, featherDirection.w - uv.y)));
 					float a = smoothstep(0.0, _EdgeFeather, d);
 					col.a *= a;
 				}

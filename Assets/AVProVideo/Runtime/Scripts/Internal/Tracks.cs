@@ -75,8 +75,6 @@ namespace RenderHeads.Media.AVProVideo
 		internal abstract bool IsActiveTrack(TrackBase track);
 		internal abstract void SetActiveTrack(TrackBase track);
 		internal abstract void SetFirstTrackActive();
-		public abstract int GetActiveTrackIndex();
-
 	}
 
 	public class TrackCollection<T> : TrackCollection where T : TrackBase
@@ -127,16 +125,6 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				ActiveTrack = _tracks[0];
 			}
-		}
-
-		public override int GetActiveTrackIndex()
-		{
-//			Debug.Log("[AVProVideo]: GetActiveTrackIndex() | ActiveTrack = " + ActiveTrack + " | ActiveTrack.Uid = " + (( ActiveTrack != null ) ? ActiveTrack.Uid : -1));
-			if( ActiveTrack != null )
-			{
-				return ActiveTrack.Uid;
-			}
-			return -1;
 		}
 
 		public override int Count { get{ return _tracks.Count; } }

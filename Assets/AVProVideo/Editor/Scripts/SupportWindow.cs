@@ -6,7 +6,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using UnityEditor.Compilation;
 
 //-----------------------------------------------------------------------------
 // Copyright 2016-2021 RenderHeads Ltd.  All rights reserved.
@@ -366,8 +365,6 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/Android/exoplayer-rtsp.aar", "782210a1816945347b3b8315658ef052", false) );
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/Android/exoplayer-smoothstreaming.aar", "d08cd71ba09f0a548ac774e50236a6f7", false) );
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/Android/extension-rtmp.aar", "782210c1836944347b3b8315658ef041", false) );
-					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/Android/rtmp-client-3.2.0.aar", "282210c1236912347b4b8315658af638", false) );
-					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/Android/guava-31.1-android.jar", "986510c1836944347b3ba313758af501", false) );
 					//
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/iOS/AVProVideo.framework", "2a1facf97326449499b63c03811b1ab2", true) );
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Plugins/iOS/AVProVideoBootstrap.m", "4df32662530a57c4f83b79e6313690dc", false) );
@@ -380,12 +377,9 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Scripts/Internal/Players/AppleMediaPlayer+Native.cs", "0bf374b5848b649e6b3840fe1dc03cd2", false) );
 					aFilesToDelete.Add( new SFileToDelete( "Assets/AVProVideo/Runtime/Scripts/Internal/Players/AppleMediaPlayerExtensions.cs", "e27ea5523e11f44c09e8d368eb1f2983", false) );
 
-					int iNumberFilesDeleted = DeleteFiles_V2_To_V3(aFilesToDelete, new[] { ".aar", ".jar", ".m", ".cs" } );
+					int iNumberFilesDeleted = DeleteFiles_V2_To_V3(aFilesToDelete, new[] { ".aar", ".m", ".cs" } );
 
 					EditorUtility.DisplayDialog("Complete", "Update from AVPro Video v2.x to v3.x is complete.\n\n" + iNumberFilesDeleted + " files/folders were removed in the process", "ok");
-
-					AssetDatabase.Refresh();
-					CompilationPipeline.RequestScriptCompilation();
 				}
 				GUI.color = Color.white;
 				GUILayout.FlexibleSpace();

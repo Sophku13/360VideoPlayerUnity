@@ -51,11 +51,7 @@
 
 		INLINE bool Android_IsStereoEyeLeft()
 		{
-			#if defined(FORCEEYE_LEFT)
-				return true;
-			#elif defined(FORCEEYE_RIGHT)
-				return false;
-			#elif defined(STEREO_MULTIVIEW_ON)
+			#if defined(STEREO_MULTIVIEW_ON)
 				int eyeIndex = SetupStereoEyeIndex();
 				return (eyeIndex == 0);
 			#else
