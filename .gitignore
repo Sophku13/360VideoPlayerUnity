@@ -47,3 +47,4 @@ sysinfo.txt
 *.apk
 *.unitypackage
 360VP/UserSettings
+/UserSettings
